@@ -10127,7 +10127,7 @@ local set_match_label = ya.sync(function(state, url, name, file)
 	local startPos = state.match[url].startPos
 	local endPos = state.match[url].endPos
 
-	if file:is_hovered() then
+	if file.is_hovered then
 		table.insert(span, ui.Span(name:sub(1, startPos[1] - 1)))
 	else
 		table.insert(span, ui.Span(name:sub(1, startPos[1] - 1)):fg(state.opt_unmatch_fg))
@@ -10140,7 +10140,7 @@ local set_match_label = ya.sync(function(state, url, name, file)
 			table.insert(span, ui.Span(key[i]):fg(state.opt_label_fg):bg(state.opt_label_bg))
 		end
 		if i + 1 <= #startPos then
-			if file:is_hovered() then
+			if file.is_hovered then
 				table.insert(span, ui.Span(name:sub(endPos[i] + 1, startPos[i + 1] - 1)))
 			else
 				table.insert(span, ui.Span(name:sub(endPos[i] + 1, startPos[i + 1] - 1)):fg(state.opt_unmatch_fg))
@@ -10149,7 +10149,7 @@ local set_match_label = ya.sync(function(state, url, name, file)
 		i = i + 1
 	end
 
-	if file:is_hovered() then
+	if file.is_hovered then
 		table.insert(span, ui.Span(name:sub(endPos[i - 1] + 1, #name)))
 	else
 		table.insert(span, ui.Span(name:sub(endPos[i - 1] + 1, #name)):fg(state.opt_unmatch_fg))
@@ -10268,7 +10268,7 @@ local toggle_ui = ya.sync(function(st)
 
 		if st.match and st.match[url] then
 			spans = set_match_label(url, name, file)
-		elseif file:is_hovered() then
+		elseif file.is_hovered then
 			spans = { ui.Span(name) }
 		else
 			spans = { ui.Span(name):fg(st.opt_unmatch_fg) }
