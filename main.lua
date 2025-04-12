@@ -10238,7 +10238,7 @@ local record_match_file = ya.sync(function(state, patterns)
 
 	-- flush page
 	if cx.active.preview.folder then
-		ya.manager_emit("peek", { force = true })
+		ya.mgr_emit("peek", { force = true })
 	end
 
 	ya.render()
@@ -10251,7 +10251,7 @@ local toggle_ui = ya.sync(function(st)
 		Status:children_remove(st.status_sj_id)
 		Entity.highlights, st.highlights, st.status_sj_id = st.highlights, nil, nil
 		if cx.active.preview.folder then
-			ya.manager_emit("peek", { force = true })
+			ya.mgr_emit("peek", { force = true })
 		end
 		ya.render()
 		return
@@ -10287,7 +10287,7 @@ local toggle_ui = ya.sync(function(st)
 	st.status_sj_id = Status:children_add(status_sj,1001,Status.LEFT)
 
 	if cx.active.preview.folder then
-		ya.manager_emit("peek", { force = true })
+		ya.mgr_emit("peek", { force = true })
 	end
 end)
 
@@ -10318,11 +10318,11 @@ local set_target_str = ya.sync(function(state, patterns, final_input_str)
 	if url then -- if the last str match is a label key, not a searchchar,toggle jump action
 		if not state.args_autocd and  state.match[url].pane == "current" then-- if target file in current pane, use `arrow` instead of`reveal` tosupport select mode
 			local folder = cx.active.current
-			ya.manager_emit("arrow",{ state.match[url].cursorPos - folder.cursor - 1 + folder.offset})
+			ya.mgr_emit("arrow",{ state.match[url].cursorPos - folder.cursor - 1 + folder.offset})
 		elseif state.args_autocd and state.match[url].isdir then
-			ya.manager_emit("cd",{ url })
+			ya.mgr_emit("cd",{ url })
 		else
-			ya.manager_emit("reveal",{ url })
+			ya.mgr_emit("reveal",{ url })
 		end
 		-- two args is (want_exit,is_match)
 		return true,true
