@@ -1,13 +1,8 @@
 # searchjump.yazi
 
-A Yazi plugin which the behavior consistent with flash.nvim in Neovim, allow search str to generate label to jump.
-
-
-
+A Yazi plugin whose behavior is consistent with flash.nvim in Neovim: from a search string it generates labels to jump to.
 
 https://github.com/DreamMaoMao/searchjump.yazi/assets/30348075/4a00eb39-211b-47c5-8e22-644a7d7bc6b1
-
-
 
 > [!NOTE]
 > The latest main branch of Yazi is required at the moment.
@@ -32,7 +27,7 @@ git clone https://github.com/DreamMaoMao/searchjump.yazi.git $env:APPDATA\yazi\c
 
 ## Usage
 
-set shortcut key to toggle searchjump mode in `~/.config/yazi/keymap.toml`. for example set `i` to toggle searchjump mode
+Set shortcut key to toggle searchjump mode in `~/.config/yazi/keymap.toml`. For example, set `i` like this:
 
 ```toml
 [[manager.prepend_keymap]]
@@ -50,23 +45,23 @@ run = "plugin searchjump -- autocd"
 desc = "searchjump mode"
 ```
 
-## opts setting (~/.config/yazi/init.lua)
+## Setting options (in `~/.config/yazi/init.lua`)
+
 ```lua
 require("searchjump"):setup({
-	unmatch_fg = "#b2a496",
+    unmatch_fg = "#b2a496",
     match_str_fg = "#000000",
     match_str_bg = "#73AC3A",
     first_match_str_fg = "#000000",
     first_match_str_bg = "#73AC3A",
-    lable_fg = "#EADFC8",
-    lable_bg = "#BA603D",
+    label_fg = "#EADFC8",
+    label_bg = "#BA603D",
     only_current = false,
     show_search_in_statusbar = false,
     auto_exit_when_unmatch = false,
-    enable_capital_lable = true,
-	search_patterns = ({"hell[dk]d","%d+.1080p","第%d+集","第%d+话","%.E%d+","S%d+E%d+",})
+    enable_capital_label = true,
+    search_patterns = ({"hell[dk]d","%d+.1080p","第%d+集","第%d+话","%.E%d+","S%d+E%d+",})
 })
 ```
 
-When you see some character singal label in right of the entry.
-Press the key of the character will jump to the corresponding entry
+When you see the single character label at the right of an entry, press the corresponding key to jump to the entry.
