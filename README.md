@@ -64,4 +64,7 @@ require("searchjump"):setup({
 })
 ```
 
-When you see the single character label at the right of an entry, press the corresponding key to jump to the entry.
+- When you see the single character label at the right of an entry, press the corresponding key to jump to the entry.
+- you can use `backspace` to delete a input character.
+- you can use `enter` to jump to the first match.
+- you can use `Space` to match the search_patterns you preset in config.
