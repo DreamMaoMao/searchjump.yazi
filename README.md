@@ -49,7 +49,7 @@ desc = "searchjump mode"
 
 ```lua
 require("searchjump"):setup({
-    unmatch_fg = "#b2a496",
+	unmatch_fg = "#b2a496",
     match_str_fg = "#000000",
     match_str_bg = "#73AC3A",
     first_match_str_fg = "#000000",
@@ -60,9 +60,13 @@ require("searchjump"):setup({
     show_search_in_statusbar = false,
     auto_exit_when_unmatch = false,
     enable_capital_label = true,
-    search_patterns = ({"hell[dk]d","%d+.1080p","第%d+集","第%d+话","%.E%d+","S%d+E%d+",})
+	-- mapdata = require("sjch").data,
+	search_patterns = ({"hell[dk]d","%d+.1080p","第%d+集","第%d+话","%.E%d+","S%d+E%d+",})
 })
 ```
+
+you can extend map data from external data to map other languages to English letters for matching, such as Chinese data mapping tables:[sjch.yazi](https://github.com/DreamMaoMao/sjch.yazi).
+
 
 - When you see the single character label at the right of an entry, press the corresponding key to jump to the entry.
 - you can use `backspace` to delete a input character.
