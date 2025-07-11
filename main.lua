@@ -60,30 +60,27 @@ local insert_next_char = ya.sync(function(state, next_char)
 	end
 end)
 
-local check_is_match_extend_char = function(target_char, extend_char_initial)
-	for i = 1, #extend_char_initial do
-		if target_char == extend_char_initial[i] then
+local check_is_match_char = function(target_char, extend_char_list)
+	for i = 1, #extend_char_list do
+		if target_char == extend_char_list[i] then
 			return true
 		end
 	end
 	return false
 end
 
-local function check_is_wide_char(char)
+local function utf8_char_byte_length(char)
 	local code = utf8.codepoint(char)
 
-	return (
-		(code >= 0x1100 and code <= 0x115F) or -- Hangul Jamo
-		(code >= 0x2E80 and code <= 0xA4CF) or -- CJK Radicals, Kangxi, etc.
-		(code >= 0xAC00 and code <= 0xD7A3) or -- Hangul Syllables
-		(code >= 0x3400 and code <= 0x4DBF) or -- CJK Unified Ideographs Extension A
-		(code >= 0x4E00 and code <= 0x9FFF) or -- CJK Unified Ideographs
-		(code >= 0xF900 and code <= 0xFAFF) or -- CJK Compatibility Ideographs
-		(code >= 0x3040 and code <= 0x309F) or -- Hiragana
-		(code >= 0x30A0 and code <= 0x30FF) or -- Katakana
-		(code >= 0x31F0 and code <= 0x31FF) or -- Katakana Phonetic Extensions
-		(code >= 0xFF00 and code <= 0xFFEF)    -- Fullwidth Forms
-	)
+	if code <= 0x007F then
+		return 1
+	elseif code <= 0x07FF then
+		return 2
+	elseif code <= 0xFFFF then
+		return 3
+	else
+		return 4
+	end
 end
 
 local function get_match_position(state, name, find_str)
@@ -94,8 +91,7 @@ local function get_match_position(state, name, find_str)
 	local startPos, endPos = {}, {}
 	local startp, endp
 	name = string.lower(name)
-	local is_wide_char = false
-	local is_matextend_char = false
+	local is_match_char = false
 
 	-- input mode
 	if not get_re_match_state() then
@@ -104,11 +100,12 @@ local function get_match_position(state, name, find_str)
 		local real_start_pos = 0
 		local real_end_pos = 0
 		local real_index = 1
+		local char_wide = 1
 		find_str = string.lower(find_str)
 		local wide_char_name = {}
 		local wide_char_match_begin = 0
 		local index_wide_char
-		local extend_char_initial
+		local extend_char_list
 		for utf8_char in string.gmatch(name, "[%z\1-\127\194-\244][\128-\191]*") do
 			table.insert(wide_char_name, utf8_char)
 		end
@@ -117,26 +114,26 @@ local function get_match_position(state, name, find_str)
 		-- so the real_index should be added 3 (Chinese)
 		while j <= #wide_char_name do
 			index_wide_char = wide_char_name[j]
-			extend_char_initial = state.mapdata[index_wide_char]
+			extend_char_list = state.mapdata[index_wide_char]
 
-			is_wide_char = check_is_wide_char(index_wide_char)
+			char_wide = utf8_char_byte_length(index_wide_char)
 
-			if extend_char_initial then
-				is_matextend_char = check_is_match_extend_char(find_str:sub(i, i), extend_char_initial)
+			if extend_char_list then
+				is_match_char = check_is_match_char(find_str:sub(i, i), extend_char_list)
 			else
-				is_matextend_char = find_str:sub(i, i) == index_wide_char
+				is_match_char = find_str:sub(i, i) == index_wide_char
 			end
 
 			-- match the first char
-			if real_start_pos == 0 and is_matextend_char then
+			if real_start_pos == 0 and is_match_char then
 				real_start_pos = real_index
 				wide_char_match_begin = j
 			end
 
-			if real_start_pos ~= 0 and is_matextend_char then
+			if real_start_pos ~= 0 and is_match_char then
 				-- match the end char
 				if i == #find_str then
-					real_end_pos = real_index + (is_wide_char and 2 or 0)
+					real_end_pos = real_index + (char_wide - 1)
 					table.insert(startPos, real_start_pos)
 					table.insert(endPos, real_end_pos)
 					insert_next_char(wide_char_name[j + 1])
@@ -149,15 +146,15 @@ local function get_match_position(state, name, find_str)
 				end
 				-- match failed, reset match begin index to the next char
 				-- of the first match char
-				real_index = real_index + (is_wide_char and 3 or 1)
-			elseif real_start_pos ~= 0 and not is_matextend_char then
+				real_index = real_index + char_wide
+			elseif real_start_pos ~= 0 and not is_match_char then
 				i = 1
 				j = wide_char_match_begin
 				real_index = real_start_pos + (wide_char_name[wide_char_match_begin]:byte() > 127 and 3 or 1)
 				real_start_pos = 0
 				wide_char_match_begin = 0
 			else
-				real_index = real_index + (is_wide_char and 3 or 1)
+				real_index = real_index + char_wide
 			end
 
 			-- update real_index
