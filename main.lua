@@ -60,13 +60,30 @@ local insert_next_char = ya.sync(function(state, next_char)
 	end
 end)
 
-local check_is_match_ch_char = function(target_char, ch_char_initial)
-	for i = 1, #ch_char_initial do
-		if target_char == ch_char_initial[i] then
+local check_is_match_extend_char = function(target_char, extend_char_initial)
+	for i = 1, #extend_char_initial do
+		if target_char == extend_char_initial[i] then
 			return true
 		end
 	end
 	return false
+end
+
+local function check_is_wide_char(char)
+	local code = utf8.codepoint(char)
+
+	return (
+		(code >= 0x1100 and code <= 0x115F) or -- Hangul Jamo
+		(code >= 0x2E80 and code <= 0xA4CF) or -- CJK Radicals, Kangxi, etc.
+		(code >= 0xAC00 and code <= 0xD7A3) or -- Hangul Syllables
+		(code >= 0x3400 and code <= 0x4DBF) or -- CJK Unified Ideographs Extension A
+		(code >= 0x4E00 and code <= 0x9FFF) or -- CJK Unified Ideographs
+		(code >= 0xF900 and code <= 0xFAFF) or -- CJK Compatibility Ideographs
+		(code >= 0x3040 and code <= 0x309F) or -- Hiragana
+		(code >= 0x30A0 and code <= 0x30FF) or -- Katakana
+		(code >= 0x31F0 and code <= 0x31FF) or -- Katakana Phonetic Extensions
+		(code >= 0xFF00 and code <= 0xFFEF)    -- Fullwidth Forms
+	)
 end
 
 local function get_match_position(state, name, find_str)
@@ -76,11 +93,9 @@ local function get_match_position(state, name, find_str)
 
 	local startPos, endPos = {}, {}
 	local startp, endp
-	local convert_name = ""
 	name = string.lower(name)
-	local is_valid_ch_char = false
-	local is_ch_char = false
-	local is_match_char = false
+	local is_wide_char = false
+	local is_matextend_char = false
 
 	-- input mode
 	if not get_re_match_state() then
@@ -93,7 +108,7 @@ local function get_match_position(state, name, find_str)
 		local wide_char_name = {}
 		local wide_char_match_begin = 0
 		local index_wide_char
-		local ch_char_initial
+		local extend_char_initial
 		for utf8_char in string.gmatch(name, "[%z\1-\127\194-\244][\128-\191]*") do
 			table.insert(wide_char_name, utf8_char)
 		end
@@ -102,27 +117,26 @@ local function get_match_position(state, name, find_str)
 		-- so the real_index should be added 3 (Chinese)
 		while j <= #wide_char_name do
 			index_wide_char = wide_char_name[j]
-			ch_char_initial = state.mapdata[index_wide_char]
+			extend_char_initial = state.mapdata[index_wide_char]
 
-			is_ch_char = (index_wide_char:byte() > 127)
-			is_valid_ch_char = (is_ch_char and ch_char_initial)
+			is_wide_char = check_is_wide_char(index_wide_char)
 
-			if is_valid_ch_char then
-				is_match_char = check_is_match_ch_char(find_str:sub(i, i), ch_char_initial)
+			if extend_char_initial then
+				is_matextend_char = check_is_match_extend_char(find_str:sub(i, i), extend_char_initial)
 			else
-				is_match_char = find_str:sub(i, i) == index_wide_char
+				is_matextend_char = find_str:sub(i, i) == index_wide_char
 			end
 
 			-- match the first char
-			if real_start_pos == 0 and is_match_char then
+			if real_start_pos == 0 and is_matextend_char then
 				real_start_pos = real_index
 				wide_char_match_begin = j
 			end
 
-			if real_start_pos ~= 0 and is_match_char then
+			if real_start_pos ~= 0 and is_matextend_char then
 				-- match the end char
 				if i == #find_str then
-					real_end_pos = real_index + (is_ch_char and 2 or 0)
+					real_end_pos = real_index + (is_wide_char and 2 or 0)
 					table.insert(startPos, real_start_pos)
 					table.insert(endPos, real_end_pos)
 					insert_next_char(wide_char_name[j + 1])
@@ -135,15 +149,15 @@ local function get_match_position(state, name, find_str)
 				end
 				-- match failed, reset match begin index to the next char
 				-- of the first match char
-				real_index = real_index + (is_ch_char and 3 or 1)
-			elseif real_start_pos ~= 0 and not is_match_char then
+				real_index = real_index + (is_wide_char and 3 or 1)
+			elseif real_start_pos ~= 0 and not is_matextend_char then
 				i = 1
 				j = wide_char_match_begin
 				real_index = real_start_pos + (wide_char_name[wide_char_match_begin]:byte() > 127 and 3 or 1)
 				real_start_pos = 0
 				wide_char_match_begin = 0
 			else
-				real_index = real_index + (is_ch_char and 3 or 1)
+				real_index = real_index + (is_wide_char and 3 or 1)
 			end
 
 			-- update real_index
@@ -376,7 +390,7 @@ end)
 
 local set_target_str = ya.sync(function(state, patterns, final_input_str)
 	local url = check_key_is_label(final_input_str)
-	if url then                                                         -- if the last str match is a label key, not a searchchar,toggle jump action
+	if url then                                                        -- if the last str match is a label key, not a searchchar,toggle jump action
 		if not state.args_autocd and state.match[url].pane == "current" then -- if target file in current pane, use `arrow` instead of`reveal` tosupport select mode
 			local folder = cx.active.current
 			ya.mgr_emit("arrow", { state.match[url].cursorPos - folder.cursor - 1 + folder.offset })
