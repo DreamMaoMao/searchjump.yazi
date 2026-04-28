@@ -30,7 +30,7 @@ git clone https://github.com/DreamMaoMao/searchjump.yazi.git $env:APPDATA\yazi\c
 Set shortcut key to toggle searchjump mode in `~/.config/yazi/keymap.toml`. For example, set `i` like this:
 
 ```toml
-[[manager.prepend_keymap]]
+[[mgr.prepend_keymap]]
 on   = [ "i" ]
 run = "plugin searchjump"
 desc = "searchjump mode"
@@ -39,7 +39,7 @@ desc = "searchjump mode"
 Or enter directory automatically when jumping onto it:
 
 ```toml
-[[manager.prepend_keymap]]
+[[mgr.prepend_keymap]]
 on   = [ "i" ]
 run = "plugin searchjump -- autocd"
 desc = "searchjump mode"
