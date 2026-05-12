@@ -1,3 +1,8 @@
+> I no longer maintain a separate plugin repository,refer my config
+https://github.com/DreamMaoMao/yazi-config
+
+
+
 # searchjump.yazi
 
 A Yazi plugin whose behavior is consistent with flash.nvim in Neovim: from a search string it generates labels to jump to.
